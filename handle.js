@@ -1,19 +1,14 @@
-var fs    = require('fs');
-var async = require('async');
+const fs = require('fs');
+const path = require('path');
+const async = require('async');
+const VIDEOS_PATH = "./public/videos"
 
 var videoUtils = require('./videoUtils');
-
-
-
 var THREADS =  1;
-
-
-
-//console.log(process.argv);
 
 var prefix = process.argv.pop();
 
-var files = fs.readdirSync('videos/' + prefix);
+var files = fs.readdirSync(`${VIDEOS_PATH}`+ prefix);
 //console.log(files);
 var regex = new RegExp('^\\d+\\.webm');
 files = files.filter(function(f) {
@@ -25,7 +20,7 @@ files = files.filter(function(f) {
 
 var fileDataArr = files.map(function(f) {
 	return {
-		filePath: 'videos/' + prefix + '/' + f,
+		filePath: `${VIDEOS_PATH}` + prefix + '/' + f,
 		fileName: f
 	};
 });
@@ -51,7 +46,7 @@ async.mapLimit(fileDataArr, THREADS, findVideoDuration2, function(err, durations
 	videoUtils.computeStartTimes(fileDataArr);
 
 	async.mapLimit(fileDataArr, THREADS, videoUtils.webm2Mpegts, function(err, tsFiles) {
-		var playlistFp = 'videos/' + prefix + '/playlist.m3u8';
+		var playlistFp = `${VIDEOS_PATH}` + prefix + '/playlist.m3u8';
 		videoUtils.generateM3u8Playlist(fileDataArr, playlistFp, false, function(err) {
 			console.log(err ? err : 'ALL DONE!');
 		});

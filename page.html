@@ -23,10 +23,10 @@
 	<body class="not-authorized">
 		<h1>testing media stream recorder</h1>
 
-		<script src="MediaStreamRecorder.js"></script>
+		<!-- <script src="MediaStreamRecorder.js"></script> -->
 
 		<script>
-			var DT = 10000; // 10 seconds per file
+			var DT = 3000; 
 		</script>
 
 		<div class="notice">please accept webcam permissions above</div>
@@ -37,19 +37,17 @@
 		</div>
 
 		<script>
+
+
 			var mediaConstraints = {
 			    //audio: !!navigator.mozGetUserMedia, // ffox-only
 			    audio: false,
 			    video: true // chrome too
 			};
-
-			navigator.getUserMedia(mediaConstraints, onMediaSuccess, onMediaError);
-
-			function zeroPad(n, chars) {
-				var s = '' + n;
-				var l = s.length;
-				return new Array(chars - l + 1).join('0') + s;
-			}
+			console.log("Getting user media!")
+			navigator.mediaDevices.getUserMedia(mediaConstraints)
+					.then(onMediaSuccess)
+					.catch(onMediaError);
 
 			function log(msg) {
 				var el = document.createElement('div');
@@ -62,27 +60,17 @@
 				var xhr = new XMLHttpRequest();
 				xhr.open('POST', url, true);
 
-				xhr.responseType = 'text/plain';
 				xhr.setRequestHeader('Content-Type', 'video/webm');
 				//xhr.setRequestHeader("Content-Length", blob.length);
-
+				
 				xhr.onload = function(e) {
 					if (this.status === 200) {
 						console.log(this.response);
 					}
 				};
-
-				//var blob2 = new Blob(blob, {type: 'video/webm'});
-
+				
+				xhr.responseType = 'text/plain';
 				xhr.send(blob);
-			}
-
-			function makeABlob(text, blob) {
-				var blobURL = URL.createObjectURL(blob);
-				var aEl = document.createElement('a');
-				aEl.appendChild( document.createTextNode(text) );
-				aEl.href = blobURL;
-				document.body.appendChild(aEl);
 			}
 
 			var maxI = Math.pow(32, 6); // length 6
@@ -97,25 +85,24 @@
 			var name = randomString();
 
 			function onMediaSuccess(stream) {
+				console.log("Media success!")
 				log('will start capturing and sending ' + (DT/1000) + 's videos when you press start');
 				document.body.className = 'authorized';
 
-			    mediaRecorder = new MediaStreamRecorder(stream);
+			    mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
 			    
-			    mediaRecorder.mimeType = 'video/webm';
-			    
-			    mediaRecorder.ondataavailable = function(blob) {
-			    	var count2 = zeroPad(count, 5);
-			    	log('sending chunk ' + name + ' #' + count2 + '...');
-			    	
-			    	send('/chunk/' + name + '/' + count2 + (stopped ? '/finish' : ''), blob);
-			    	//makeABlob(count, blob);
-
+			    mediaRecorder.ondataavailable = blobEvent => { 
+					const blob = blobEvent.data;
+			    	var formattedCount = count.toString().padStart(5, '0');
+			    	log('sending chunk ' + name + ' #' + formattedCount + '...');
+					
+			    	send('/chunk/' + name + '/' + formattedCount + (stopped ? '/finish' : ''), blob);
 			    	++count;
 			    };
 			}
 
 			function onMediaError(e) {
+				console.log(e)
 			    log('media error');
 			}
 		</script>

@@ -1,6 +1,9 @@
 var fs   = require('fs');
 var http = require('http');
 
+const VIDEOS_PATH = "./public/videos"
+
+
 var videoUtils = require('./videoUtils');
 
 
@@ -73,16 +76,16 @@ http.createServer(function(req, res) {
     	var isLast = !!parts[4];
 
     	if ((/^0+$/).test(num)) {
-    		fs.mkdirSync('videos/' + prefix);
+    		fs.mkdirSync(`${VIDEOS_PATH}/` + prefix);
     		isFirst = true;
     	}
 
-    	var fp = 'videos/' + prefix + '/' + num + '.webm';
-    	var msg = 'got ' + fp;
+    	const fragmentPath = `${VIDEOS_PATH}/` + prefix + '/' + num + '.webm';
+    	var msg = 'got ' + fragmentPath;
 		console.log(msg);
 		console.log('isFirst:%s, isLast:%s', isFirst, isLast);
 
-		var stream = fs.createWriteStream(fp, {encoding:'binary'});
+		const stream = fs.createWriteStream(fragmentPath, {encoding:'binary'});
 		/*stream.on('end', function() {
 			respond(res, ['text/plain', msg]);
 		});*/
@@ -95,13 +98,13 @@ http.createServer(function(req, res) {
 
 			if (!LIVE) { return; }
 
-			videoUtils.findVideoDuration(fp, function(err, duration) {
+			videoUtils.findVideoDuration(fragmentPath, function(err, duration) {
 				if (err) { return console.error(err); }
 				console.log('duration: %s', duration.toFixed(2));
 
 				var fd = {
 					fileName: num + '.webm',
-					filePath: fp,
+					filePath: fragmentPath,
 					duration: duration
 				};
 
@@ -121,7 +124,7 @@ http.createServer(function(req, res) {
 					if (err) { return console.error(err); }
 					console.log('created %s', mpegtsFp);
 					
-					var playlistFp = 'videos/' + prefix + '/playlist.m3u8';
+					var playlistFp = `${VIDEOS_PATH}/` + prefix + '/playlist.m3u8';
 
 					var fileDataArr2 = (isLast ? fileDataArr : lastN(fileDataArr, PREV_ITEMS_IN_LIVE));
 

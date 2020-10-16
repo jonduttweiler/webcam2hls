@@ -19,37 +19,28 @@ function maxOfArr(arr) {
 
 var FPS     = 25;
 var frameTime = 1 / FPS; // TODO not sure this is the best approach, adding one fictitious frame
-function findVideoDuration(fp, cb) {
-	var out = [];
+function findVideoDuration(fragmentPath, cb) {
 
+	var cmd = FFMPEG_DIR + 'ffprobe';
 	var args = [
-		FFMPEG_DIR + 'ffprobe',
 		'-v', 'quiet', // less verbose
 		'-print_format', 'json', // output json
 		'-show_format', // return format info
 		// '-show_streams',
-		fp
+		fragmentPath
 	];
+	
+	const proc = child_process.spawn(cmd, args);
+	
+	let out = [];
+	proc.stdout.on('data', data => out.push(data.toString()));
 
-	//console.log(args.join(' '));
+	proc.stdout.on('error', err => console.log(err));
 
-	var cmd = args.shift();
-
-	var proc = child_process.spawn(cmd, args);
-
-	proc.stdout.on('data', function(data) {
-		out.push( data.toString() );
-	});
-
-	/*proc.stderr.on('data', function(data) {
-		// out.push( data.toString() );
-	});*/
-
-	proc.on('close', function() {
-		//console.log('close');
+	proc.on('close', () => {
 		out = out.join('');
-
 		out = JSON.parse(out);
+		//console.log(out)
 		var d = parseFloat( out.format.duration );
 
 		cb(null, d);

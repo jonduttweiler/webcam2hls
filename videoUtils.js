@@ -4,7 +4,7 @@ var child_process = require('child_process');
 
 
 //var FFMPEG_DIR = '/opt/ffmpeg/bin/';
-var FFMPEG_DIR = '/usr/local/bin/';
+var FFMPEG_DIR = '/usr/bin/';
 
 
 
